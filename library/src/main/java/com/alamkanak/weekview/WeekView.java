@@ -191,7 +191,6 @@ public class WeekView extends View {
         @Override
         public boolean onDown(MotionEvent e) {
             stopScrolling();
-            //goToNearestOrigin();
             return true;
         }
 
