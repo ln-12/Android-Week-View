@@ -881,11 +881,17 @@ public class WeekView extends View {
                 continue;
             }
 
-            // Get more events if necessary. We want to store the events 3 months beforehand. Get
-            // events only when it is the first iteration of the loop.
+            // Get more events if necessary.
+
+            // mFetchedPeriod: currently fetched period index
+            // mWeekViewLoader.toWeekViewPeriodIndex(day): index for the day we want to display
+            // fetchIndex = 1.0: end of period in the future reached
+            // fetchIndex = 0.0: end of period in the past reached
+            double fetchIndex = mWeekViewLoader.toWeekViewPeriodIndex(day) - mFetchedPeriod;
+
             if (mEventRects == null || mRefreshEvents ||
                     (dayNumber == leftDaysWithGaps + 1 && mFetchedPeriod != (int) mWeekViewLoader.toWeekViewPeriodIndex(day) &&
-                            Math.abs(mFetchedPeriod - mWeekViewLoader.toWeekViewPeriodIndex(day)) > 0.5)) {
+                            (fetchIndex >= 1.0 || fetchIndex <= 0.0))) {
                 getMoreEvents(day);
                 mRefreshEvents = false;
             }
