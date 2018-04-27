@@ -728,11 +728,11 @@ public class WeekView extends View {
                 }
             }
         }
-        if (containsAllDayEvent) {
+        //if (containsAllDayEvent) {
             mHeaderHeight = mHeaderTextHeight + (mAllDayEventHeight + mHeaderMarginBottom);
-        } else {
+        /*} else {
             mHeaderHeight = mHeaderTextHeight;
-        }
+        }*/
     }
 
     private void drawTimeColumnAndAxes(Canvas canvas) {
