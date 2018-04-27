@@ -164,6 +164,7 @@ public class WeekView extends View {
     private boolean mHorizontalFlingEnabled = true;
     private boolean mVerticalFlingEnabled = true;
     private int mAllDayEventHeight = 100;
+    private boolean mAlwaysShowAllDayEventGap = false;
     private float mZoomFocusPoint = 0;
     private boolean mZoomFocusPointEnabled = true;
     private int mScrollDuration = 250;
@@ -728,11 +729,11 @@ public class WeekView extends View {
                 }
             }
         }
-        //if (containsAllDayEvent) {
+        if (containsAllDayEvent || mAlwaysShowAllDayEventGap) {
             mHeaderHeight = mHeaderTextHeight + (mAllDayEventHeight + mHeaderMarginBottom);
-        /*} else {
+        } else {
             mHeaderHeight = mHeaderTextHeight;
-        }*/
+        }
     }
 
     private void drawTimeColumnAndAxes(Canvas canvas) {
@@ -2547,6 +2548,15 @@ public class WeekView extends View {
 
     public int getMinOverlappingMinutes() {
         return this.mMinOverlappingMinutes;
+    }
+
+
+    public boolean alwaysShowAllDayEventGap() {
+        return mAlwaysShowAllDayEventGap;
+    }
+
+    public void alwaysShowAllDayEventGap(boolean mAlwaysShowAllDayEventGap) {
+        this.mAlwaysShowAllDayEventGap = mAlwaysShowAllDayEventGap;
     }
 
     /////////////////////////////////////////////////////////////////
