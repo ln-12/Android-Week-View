@@ -13,9 +13,7 @@ import android.graphics.Region;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.view.animation.FastOutLinearInInterpolator;
@@ -58,7 +56,7 @@ import static com.alamkanak.weekview.WeekViewUtil.today;
 public class WeekView extends View {
 
     private enum Direction {
-        NONE, LEFT, RIGHT, VERTICAL
+        NONE, LEFT, RIGHT, VERTICAL, HORIZONTAL
     }
 
     @Deprecated
@@ -204,8 +202,9 @@ public class WeekView extends View {
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
             // Check if view is zoomed.
-            if (mIsZooming)
+            if (mIsZooming) {
                 return true;
+            }
 
             switch (mCurrentScrollDirection) {
                 case NONE: {
@@ -274,8 +273,9 @@ public class WeekView extends View {
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            if (mIsZooming)
+            if (mIsZooming) {
                 return true;
+            }
 
             if ((mCurrentFlingDirection == Direction.LEFT && !mHorizontalFlingEnabled) ||
                     (mCurrentFlingDirection == Direction.RIGHT && !mHorizontalFlingEnabled) ||
@@ -520,6 +520,8 @@ public class WeekView extends View {
         mMinimumFlingVelocity = ViewConfiguration.get(mContext).getScaledMinimumFlingVelocity();
         mScaledTouchSlop = ViewConfiguration.get(mContext).getScaledTouchSlop();
 
+        mScaleDetector = new ScaleGestureDetector(mContext, new WeekViewGestureListener(mContext));
+
         // Measure settings for time column.
         mTimeTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mTimeTextPaint.setTextAlign(Paint.Align.RIGHT);
@@ -604,8 +606,6 @@ public class WeekView extends View {
         mDefaultEventColor = Color.parseColor("#9fc6e7");
         // Set default empty event color.
         mNewEventColor = Color.parseColor("#3c93d9");
-
-        mScaleDetector = new ScaleGestureDetector(mContext, new WeekViewGestureListener());
     }
 
     private void resetHomeDate() {
@@ -1408,11 +1408,11 @@ public class WeekView extends View {
             public int compare(EventRect left, EventRect right) {
                 long start1 = left.event.getStartTime().getTimeInMillis();
                 long start2 = right.event.getStartTime().getTimeInMillis();
-                int comparator = start1 > start2 ? 1 : (start1 < start2 ? -1 : 0);
+                int comparator = Long.compare(start1, start2);
                 if (comparator == 0) {
                     long end1 = left.event.getEndTime().getTimeInMillis();
                     long end2 = right.event.getEndTime().getTimeInMillis();
-                    comparator = end1 > end2 ? 1 : (end1 < end2 ? -1 : 0);
+                    comparator = Long.compare(end1, end2);
                 }
                 return comparator;
             }
@@ -2524,18 +2524,12 @@ public class WeekView extends View {
 
     public void enableDropListener() {
         this.mEnableDropListener = true;
-        //set drag and drop listener, required Honeycomb+ Api level
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            setOnDragListener(new DragListener());
-        }
+        setOnDragListener(new DragListener());
     }
 
     public void disableDropListener() {
         this.mEnableDropListener = false;
-        //set drag and drop listener, required Honeycomb+ Api level
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            setOnDragListener(null);
-        }
+        setOnDragListener(null);
     }
 
     public boolean isDropListenerEnabled() {
@@ -2567,8 +2561,8 @@ public class WeekView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        mScaleDetector.onTouchEvent(event);
-        boolean val = mGestureDetector.onTouchEvent(event);
+        boolean val = mScaleDetector.onTouchEvent(event);
+        val = mGestureDetector.onTouchEvent(event) || val;
 
         // Check after call of mGestureDetector, so mCurrentFlingDirection and mCurrentScrollDirection are set.
         if (event.getAction() == MotionEvent.ACTION_UP && !mIsZooming && mCurrentFlingDirection == Direction.NONE) {
@@ -2578,7 +2572,7 @@ public class WeekView extends View {
             mCurrentScrollDirection = Direction.NONE;
         }
 
-        return val;
+        return val || super.onTouchEvent(event);
     }
 
     /**
@@ -2655,12 +2649,8 @@ public class WeekView extends View {
      * @return true if scrolling should be stopped before reaching the end of animation.
      */
     private boolean forceFinishScroll() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            // current velocity only available since api 14
-            return mScroller.getCurrVelocity() <= mMinimumFlingVelocity;
-        } else {
-            return false;
-        }
+        // current velocity only available since api 14
+        return mScroller.getCurrVelocity() <= mMinimumFlingVelocity;
     }
 
 
@@ -2844,24 +2834,39 @@ public class WeekView extends View {
      */
     private class WeekViewGestureListener implements ScaleGestureDetector.OnScaleGestureListener {
         float mFocusedPointY;
+        Direction scaleDirection;
+        float newNumberOfDays;
+        int maxNumberOfVisibleDays;
+
+        WeekViewGestureListener(Context context){
+            this.maxNumberOfVisibleDays = context.getResources().getConfiguration().screenWidthDp / 70;
+        }
 
         @Override
         public void onScaleEnd(ScaleGestureDetector detector) {
             mIsZooming = false;
+            scaleDirection = null;
         }
 
         @Override
         public boolean onScaleBegin(ScaleGestureDetector detector) {
             mIsZooming = true;
-            goToNearestOrigin();
+            newNumberOfDays = mNumberOfVisibleDays;
+            mScroller.abortAnimation();
 
-            // Calculate focused point for scale action
-            if (mZoomFocusPointEnabled) {
-                // Use fractional focus, percentage of height
-                mFocusedPointY = (getHeight() - mHeaderHeight - mHeaderRowPadding * 2 - mHeaderMarginBottom) * mZoomFocusPoint;
-            } else {
-                // Grab focus
-                mFocusedPointY = detector.getFocusY();
+            if(detector.getCurrentSpanX() > detector.getCurrentSpanY()){
+                scaleDirection = Direction.HORIZONTAL;
+            }else{
+                scaleDirection = Direction.VERTICAL;
+
+                // Calculate focused point for scale action
+                if (mZoomFocusPointEnabled) {
+                    // Use fractional focus, percentage of height
+                    mFocusedPointY = (getHeight() - mHeaderHeight - mHeaderRowPadding * 2 - mHeaderMarginBottom) * mZoomFocusPoint;
+                } else {
+                    // Grab focus
+                    mFocusedPointY = detector.getFocusY();
+                }
             }
 
             return true;
@@ -2870,23 +2875,34 @@ public class WeekView extends View {
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
             final float scale = detector.getScaleFactor();
+            newNumberOfDays *= 1f / scale;
 
-            mNewHourHeight = Math.round(mHourHeight * scale);
+            if(scaleDirection == Direction.HORIZONTAL){
+                if(newNumberOfDays > maxNumberOfVisibleDays){
+                    newNumberOfDays = maxNumberOfVisibleDays;
+                }else if(newNumberOfDays < 1){
+                    newNumberOfDays = 1;
+                }
 
-            // Calculating difference
-            float diffY = mFocusedPointY - mCurrentOrigin.y;
-            // Scaling difference
-            diffY = diffY * scale - diffY;
-            // Updating week view origin
-            mCurrentOrigin.y -= diffY;
+                int newDayCount = Math.round(newNumberOfDays);
+                setNumberOfVisibleDays(newDayCount);
+            }else if(scaleDirection == Direction.VERTICAL) {
+                mNewHourHeight = Math.round(mHourHeight * scale);
 
-            invalidate();
+                // Calculating difference
+                float diffY = mFocusedPointY - mCurrentOrigin.y;
+                // Scaling difference
+                diffY = diffY * scale - diffY;
+                // Updating week view origin
+                mCurrentOrigin.y -= diffY;
+
+                invalidate();
+            }
             return true;
         }
 
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.HONEYCOMB)
     private class DragListener implements View.OnDragListener {
         @Override
         public boolean onDrag(View v, DragEvent e) {
