@@ -6,9 +6,16 @@ Android Week View
 New Features
 ------------
 * Merged pull request https://github.com/Quivr/Android-Week-View/pull/84 to get rid of the input lag
+
 * Merged (my own) pull request https://github.com/Quivr/Android-Week-View/pull/86 to have some nice prefetching
+
 * Latest gradle dependencies
+
 * Manual control of "All day events" header's visibility if there are no events: weekView.alwaysShowAllDayEventGap(true)
+
+* Set number of visible days with horizontal scale gesture
+
+  
 
 
 **Android Week View** is an android library to display calendars (week view or day view) within the app. It supports custom styling.
@@ -53,13 +60,13 @@ License
 ----------
 
     Copyright 2014 Raquib-ul-Alam
-
+    
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
-
+    
        http://www.apache.org/licenses/LICENSE-2.0
-
+    
     Unless required by applicable law or agreed to in writing, software
     distributed under the License is distributed on an "AS IS" BASIS,
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
