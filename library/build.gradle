@@ -17,6 +17,6 @@ configurations {
     javadocDeps
 }
 dependencies {
-    implementation 'com.android.support:appcompat-v7:28.0.0-beta01'
-    javadocDeps 'com.android.support:appcompat-v7:28.0.0-beta01'
+    implementation 'androidx.appcompat:appcompat:1.0.0-beta01'
+    javadocDeps 'androidx.appcompat:appcompat:1.0.0-beta01'
 }
