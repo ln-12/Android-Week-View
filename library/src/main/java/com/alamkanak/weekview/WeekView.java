@@ -184,6 +184,9 @@ public class WeekView extends View {
     private ScrollListener mScrollListener;
     private AddEventClickListener mAddEventClickListener;
     private DropListener mDropListener;
+    private ScaleListener mDayScaleListener;
+    private ScaleListener mHourScaleListener;
+
 
     private final GestureDetector.SimpleOnGestureListener mGestureListener = new GestureDetector.SimpleOnGestureListener() {
 
@@ -1561,6 +1564,14 @@ public class WeekView extends View {
         this.mDropListener = dropListener;
     }
 
+    public void setDayScaleListener(ScaleListener scaleListener) {
+        this.mDayScaleListener = scaleListener;
+    }
+
+    public void setHourScaleListener(ScaleListener scaleListener) {
+        this.mHourScaleListener = scaleListener;
+    }
+
     public EventClickListener getEventClickListener() {
         return mEventClickListener;
     }
@@ -2829,6 +2840,15 @@ public class WeekView extends View {
         void onAddEventClicked(Calendar startTime, Calendar endTime);
     }
 
+    public interface ScaleListener {
+        /**
+         * Triggered when user scaled horizontal or vertical
+         *
+         * @param newValue: the new value for height or visible days
+         */
+        void onScale(Integer newValue);
+    }
+
     /**
      * A simple GestureListener that holds the focused hour while scaling.
      */
@@ -2886,6 +2906,8 @@ public class WeekView extends View {
 
                 int newDayCount = Math.round(newNumberOfDays);
                 setNumberOfVisibleDays(newDayCount);
+
+                mDayScaleListener.onScale(newDayCount);
             }else if(scaleDirection == Direction.VERTICAL) {
                 mNewHourHeight = Math.round(mHourHeight * scale);
 
@@ -2897,6 +2919,8 @@ public class WeekView extends View {
                 mCurrentOrigin.y -= diffY;
 
                 invalidate();
+
+                mHourScaleListener.onScale(mNewHourHeight);
             }
             return true;
         }

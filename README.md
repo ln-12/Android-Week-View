@@ -13,14 +13,14 @@ New Features
 
 * Manual control of "All day events" header's visibility if there are no events: weekView.alwaysShowAllDayEventGap(true)
 
-* Set number of visible days with horizontal scale gesture
+* Set number of visible days with horizontal scale gesture instead of using an extra popup menu
+
+  * includes new listeners to get notified about scaling
 
   
 
 
 **Android Week View** is an android library to display calendars (week view or day view) within the app. It supports custom styling.
-
-[Why this fork? (features + community & contributing)](https://github.com/Quivr/Android-Week-View/issues/45)
 
 ![](images/screen-shot.png)
 
