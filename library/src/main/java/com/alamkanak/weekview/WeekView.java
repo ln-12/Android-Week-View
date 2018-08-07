@@ -2907,7 +2907,9 @@ public class WeekView extends View {
                 int newDayCount = Math.round(newNumberOfDays);
                 setNumberOfVisibleDays(newDayCount);
 
-                mDayScaleListener.onScale(newDayCount);
+                if(mDayScaleListener != null) {
+                    mDayScaleListener.onScale(newDayCount);
+                }
             }else if(scaleDirection == Direction.VERTICAL) {
                 mNewHourHeight = Math.round(mHourHeight * scale);
 
@@ -2920,7 +2922,9 @@ public class WeekView extends View {
 
                 invalidate();
 
-                mHourScaleListener.onScale(mNewHourHeight);
+                if(mHourScaleListener != null) {
+                    mHourScaleListener.onScale(mNewHourHeight);
+                }
             }
             return true;
         }
