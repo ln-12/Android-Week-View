@@ -17,6 +17,8 @@ New Features
 
   * includes new listeners to get notified about scaling
 
+* Fixed crash on Android P devices (see: https://stackoverflow.com/questions/50231950/what-is-the-best-alternative-to-canvas-cliprect-with-region-op-replace)
+
   
 
 
